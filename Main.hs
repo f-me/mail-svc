@@ -61,6 +61,7 @@ main = do
         Just pwd  <- Config.lookup conf "pg.pass"
         Just db   <- Config.lookup conf "pg.db"
         Just tout <- Config.lookup conf "queue.scan_interval"
+        Just copy <- Config.lookup conf "smtp.copy"
 
         syslog Info $ "Connecting to Postgres on " ++ host
         let cInfo = PG.ConnectInfo host port user pwd db
@@ -71,20 +72,21 @@ main = do
             5 -- maximum number of resources to keep open
 
         syslog Info "Starting main loop"
-        loop tout pgPool
+        loop tout copy pgPool
 
     _ -> error $ "Usage: " ++ prog ++ " <config.conf>"
 
 
 
-loop :: Int -> Pool PG.Connection -> IO ()
-loop tout pgPool = forever $ do
+loop :: Int -> Text -> Pool PG.Connection -> IO ()
+loop tout copy pgPool = forever $ do
   let go = getJob pgPool >>= \case
         [] -> return ()
         [msg] -> do
           syslog Info $ "Got job: " ++ show (ident msg)
 
-          res <- sendMail msg `catch` \e ->
+          let msg' = msg {cc = copy : cc msg}
+          res <- sendMail msg' `catch` \e ->
                   return (Left $ show (e :: SomeException))
 
           case res of
