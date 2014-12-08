@@ -130,8 +130,8 @@ endJob pgPool ident st
 sendMail :: Email -> IO (Either String ())
 sendMail (Email{..}) = do
   let mkAddr = Address Nothing . T.strip
-  renderSendMailCustom "/usr/sbin/exim" ["-t"] $
-    (emptyMail $ mkAddr from)
+  renderSendMailCustom "/usr/sbin/sendmail" ["-t", "-i", "-f", T.unpack from]
+    $ (emptyMail $ mkAddr from)
       { mailTo      = map mkAddr to
       , mailCc      = map mkAddr cc
       , mailHeaders = [("Subject", subj)]
