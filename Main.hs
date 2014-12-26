@@ -31,7 +31,7 @@ data Email = Email
   , from  :: Addr
   , to    :: [Addr]
   , cc    :: [Addr]
-  , reply :: Addr
+  , reply :: Maybe Addr
   , mime  :: Mime
   , subj  :: Text
   , body  :: L.ByteString
@@ -135,6 +135,7 @@ sendMail (Email{..}) = do
       { mailTo      = map mkAddr to
       , mailCc      = map mkAddr cc
       , mailHeaders = [("Subject", subj)]
+                    ++ maybe [] (\addr -> [("Reply-To", addr)]) reply
       , mailParts   = [[Part mime QuotedPrintableText Nothing [] body]]
       }
   return $ Right ()
