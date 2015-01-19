@@ -136,6 +136,6 @@ sendMail (Email{..}) = do
       , mailCc      = map mkAddr cc
       , mailHeaders = [("Subject", subj)]
                     ++ maybe [] (\addr -> [("Reply-To", addr)]) reply
-      , mailParts   = [[Part mime QuotedPrintableText Nothing [] body]]
+      , mailParts   = [[Part mime Base64 Nothing [] body]]
       }
   return $ Right ()
